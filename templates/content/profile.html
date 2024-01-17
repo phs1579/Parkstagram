@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <!-- Google Icon -->
+    <link
+            href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+            rel="stylesheet">
+
+    <!-- Jquery -->
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+    <title>Hello, world!</title>
+
+    <style>
+        .box {
+            width: 150px;
+            height: 150px;
+            border-radius: 70%;
+            overflow: hidden;
+        }
+
+        .profile {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .feed_box {
+            margin: 20px 0;
+            border: solid 1px gray;
+            background-color: white
+        }
+
+        .modal_overlay {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(1.5px);
+            -webkit-backdrop-filter: blur(1.5px);
+        }
+
+        .modal_window {
+            background: white;
+            backdrop-filter: blur(13.5px);
+            -webkit-backdrop-filter: blur(13.5px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            width: 800px;
+            height: 600px;
+            position: relative;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="position: fixed;width: 100%">
+    <div class="container-fluid" style="justify-content: space-between;flex-wrap: nowrap; min-width: 1000px">
+        <a class="navbar-brand" href="main"><img style="width: 100px"
+                                              src="https://www.instagram.com/static/images/web/mobile_nav_type_logo-2x.png/1b47f9d0e595.png">
+        </a>
+        <input class="form-control me-2" style="width: 400px" type="search" placeholder="Search" aria-label="Search">
+        <div style="display: flex">
+            <a href="main" style="color: black"><span class="material-icons" style="padding-right: 10px">home</span></a>
+            <span id="nav_bar_add_box" class="material-icons-outlined" style="padding-right: 10px">add_box</span>
+
+            <div class="dropdown">
+                <a href="#" role="button" id="dropdownMenuLink"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="box" style="width: 25px; height: 25px">
+
+                        <img class="profile"
+                             src="{% get_media_prefix %}{{ user.profile_image }}">
+
+                    </div>
+                </a>
+
+                <ul class="dropdown-menu" style="left:-158px" aria-labelledby="dropdownMenuLink">
+                    <li><a class="dropdown-item" href="#">프로필</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/user/logout">로그아웃</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+<div style="display: flex; flex-direction: row;text-align: center; justify-content: center;padding-top: 60px; background-color:#FAFAFA">
+    <div style="padding: 20px 60px">
+        <div class="box" style="width: 175px; height: 175px;">
+
+            <img class="profile"
+                 src="{% get_media_prefix %}{{ user.profile_image }}">
+
+        </div>
+    </div>
+    <div style="text-align: left">
+        <div style="display: flex; flex-direction: row; margin: 20px 0">
+            <div style="font-size: 26px; margin-right: 40px">
+                {{ user.nickname }}
+            </div>
+            <button id="button_profile_upload" style="margin-right: 40px"> 프로필 사진 편집</button>
+            <input type="file" id="input_fileupload" onchange="profile_upload();" style="display: none" />
+            <span class="material-icons-outlined" style="margin-right: 40px">settings</span>
+        </div>
+
+        <div style="margin-bottom: 20px">
+            게시물 {{ feed_list|length }}  팔로워 111 팔로잉 111
+        </div>
+        <div>
+            <b>{{ user.name }}</b>
+        </div>
+    </div>
+</div>
+
+<div style="border-top: solid 2px rgba(50,50,50,0.1); width: 100%">
+
+    <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; margin: 20px">
+        <div id="button_feed_list" style="cursor: pointer;margin: 0 30px;display: flex; flex-direction: row;align-items: center"><span class="material-icons-outlined">grid_on</span>내 게시물</div>
+        <div id="button_feed_like_list" style="cursor: pointer;margin: 0 30px;display: flex; flex-direction: row;align-items: center"><span class="material-icons-outlined">favorite_border</span>좋아요</div>
+        <div id="button_feed_bookmark_list" style="cursor: pointer;margin: 0 30px;display: flex; flex-direction: row;align-items: center"><span class="material-icons-outlined">bookmark_border</span>북마크</div>
+    </div>
+
+</div>
+
+<div id="feed_list" style="width: 100%; min-width: 1000px; display: flex; align-items: center;justify-content: center">
+    <div style="display: flex; flex-direction: row; flex-wrap: wrap; width: 1000px; justify-content: center">
+        {% for feed in feed_list %}
+            <div class="content-feed" style="width: 300px; height: 300px; margin: 10px 5px 0px 5px;">
+                <input type="hidden" class="feed-id" value="{{ feed.id }}">
+                <input type="hidden" id="is_liked" value="{{ is_liked|yesno:"true,false" }}">
+                <img class="feed-image{{ forloop.counter }}" style="width: 300px; height: 300px; object-fit: cover"
+                     src="{% get_media_prefix %}{{ feed.image }}">
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="like_feed_list" style="width: 100%; min-width: 1000px; display: none; align-items: center; justify-content: center">
+    <div style="display: flex; flex-direction: row; flex-wrap: wrap; width: 1000px; justify-content: center">
+        {% for feed in like_feed_list %}
+            <div class="like_feed" style="width: 300px; height: 300px; margin: 10px 5px 0px 5px;">
+                <input type="hidden" class="like_feed-id" value="{{ feed.id }}">
+                <input type="hidden" id="like_is_liked" value="{{ is_liked|yesno:"true,false" }}">
+                <div>
+                    <img class="like_feed_image{{ forloop.counter }}" style="width: 300px; height: 300px; object-fit: cover"
+                         src="{% get_media_prefix %}{{ feed.image }}">
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<div id="bookmark_feed_list" style="width: 100%; min-width: 1000px; display: none; align-items: center;justify-content: center">
+    <div style="display: flex; flex-direction: row; flex-wrap: wrap; width: 1000px; justify-content: center">
+        {% for feed in bookmark_feed_list %}
+            <div class="book_feed" style="width: 300px;height: 300px; margin: 10px 5px 0px 5px;">
+                <input type="hidden" class="book_feed-id" value="{{ feed.id }}">
+                <input type="hidden" id="book_is_liked" value="{{ is_liked|yesno:"true,false" }}">
+                <div><img class="book_feed_image{{ forloop.counter }}" style="width: 300px;height: 300px; object-fit: cover"
+                          src="{% get_media_prefix %}{{ feed.image }}">
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- 첫번째 모달 -->
+<div id="first_modal" class="modal_overlay">
+    <div class="modal_window">
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div>
+
+            </div>
+            <div>
+                새 이미지 업로드
+            </div>
+            <div>
+                <span class="modal_close material-icons-outlined">close</span>
+            </div>
+        </div>
+
+        <div class="img_upload_space" style="border-top: solid 1px gray;width: 778px; height: 540px;margin-top: 10px">
+
+        </div>
+    </div>
+</div>
+
+<!-- 두번째 모달 -->
+<div id="second_modal" class="modal_overlay">
+    <div class="modal_window">
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div>
+
+            </div>
+            <div>
+                새 이미지 업로드
+            </div>
+            <div>
+                <span class="modal_close material-icons-outlined">close</span>
+            </div>
+        </div>
+
+        <div style="border-top: solid 1px gray;display: flex; flex-direction: row;margin-top: 10px">
+            <div class="img_upload_space" style="width: 500px; height: 540px;">
+
+            </div>
+            <div style="border-left: solid 1px gray">
+                <div>
+                    <textarea id="input_feed_content" class="form-control" style="width: 276px; height: 400px"
+                              id="exampleFormControlTextarea1" rows="5"></textarea>
+                </div>
+                <button id="feed_create_button" type="button" class="btn btn-primary" style="width: 100%">
+                    공유하기
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<!-- 수정모달 -->
+<div id="second_modify_modal" class="modal_overlay">
+    <div class="modal_window">
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div>
+
+            </div>
+            <div>
+                게시물 수정
+            </div>
+            <div>
+                <span class="modal_close material-icons-outlined">close</span>
+            </div>
+        </div>
+
+        <div style="border-top: solid 1px gray;display: flex; flex-direction: row;margin-top: 10px">
+            <div class="img_upload_space" style="width: 500px; height: 540px;">
+                <img id="existing_image" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div>
+                <div>
+                    <textarea id="input_modify_feed_content" class="form-control" style="width: 276px; height: 400px"
+                              id="exampleFormControlTextarea2" rows="5"></textarea>
+                </div>
+                <button id="modify_feed_create_button" type="button" class="btn btn-primary" style="width: 100%">
+                    수정하기
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- 내 게시물 상세보기 모달 -->
+<div id="feed_modal" class="modal_overlay">
+    <div class="modal_window">
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div></div>
+            <div>상세보기</div>
+            <div>
+                <span class="modal_close material-icons-outlined">close</span>
+            </div>
+        </div>
+
+        <div style="border-top: solid 1px gray; display: flex; flex-direction: row; margin-top: 10px">
+            <div class="img_upload_space" style="border-top: solid 1px gray; width: 778px; height: 540px; margin-top: 10px">
+                <img id="modal_image" style="width: 500px; height: 500px; object-fit: cover">
+            </div>
+            <div style="border-left: solid 1px gray">
+                <div id="modal_content" style="width: 276px; height: 400px"></div>
+                <div>
+                    <span id="modal_favorite" class="modal_favorite material-icons-outlined"
+                          style="color: red; cursor: pointer">
+                        <!-- Display different icons based on whether the user liked the feed or not -->
+                        {% if is_user_liked %}
+                            favorite
+                        {% else %}
+                            favorite_border
+                        {% endif %}
+                    </span>
+                    <b id="modal_like_count"></b>
+                </div>
+
+                <div id="modal_comment"></div>
+                <div>
+                    <button id="modify_button">수정하기</button>
+                    <button id="delete_button">삭제하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 내 게시물 상세보기 모달 끝 -->
+
+
+
+<!-- 좋아요 상세보기 모달 -->
+<div id="likefeed_modal" class="modal_overlay">
+    <div class="modal_window">
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div>
+
+            </div>
+            <div>
+                상세보기
+            </div>
+            <div>
+                <span class="modal_close material-icons-outlined">close</span>
+            </div>
+        </div>
+
+        <div style="border-top: solid 1px gray;display: flex; flex-direction: row;margin-top: 10px">
+            <div class="img_upload_space" style="border-top: solid 1px gray; width: 778px; height: 540px; margin-top: 10px">
+                <img id="likemodal_image" style="width: 500px; height: 500px; object-fit: cover">
+            </div>
+            <div style="border-left: solid 1px gray">
+                <div id="likemodal_content" style="width: 276px; height: 400px">
+
+                </div>
+                <div>
+                    <span id="likemodal_favorite" class="modal_favorite material-icons-outlined"
+                          style="color: red; cursor: pointer">
+                        <!-- Display different icons based on whether the user liked the feed or not -->
+                        {% if is_user_liked %}
+                            favorite
+                        {% else %}
+                            favorite_border
+                        {% endif %}
+                    </span>
+                    <b id="likemodal_like_count"></b>
+                </div>
+                <div id="likemodal_comment">
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<!-- 좋아요 상세보기 모달 끝 -->
+
+<!-- 북마크 상세보기 모달 -->
+<div id="bookfeed_modal" class="modal_overlay">
+    <div class="modal_window">
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div>
+
+            </div>
+            <div>
+                상세보기
+            </div>
+            <div>
+                <span class="modal_close material-icons-outlined">close</span>
+            </div>
+        </div>
+
+        <div style="border-top: solid 1px gray;display: flex; flex-direction: row;margin-top: 10px">
+            <div class="img_upload_space" style="border-top: solid 1px gray; width: 778px; height: 540px; margin-top: 10px">
+                <img id="bookmodal_image" style="width: 500px; height: 500px; object-fit: cover">
+            </div>
+            <div style="border-left: solid 1px gray">
+                <div id="bookmodal_content" style="width: 276px; height: 400px">
+
+                </div>
+                 <div>
+                    <span id="bookmodal_favorite" class="modal_favorite material-icons-outlined"
+                          style="color: red; cursor: pointer">
+                        <!-- Display different icons based on whether the user liked the feed or not -->
+                        {% if is_user_liked %}
+                            favorite
+                        {% else %}
+                            favorite_border
+                        {% endif %}
+                    </span>
+                    <b id="bookmodal_like_count"></b>
+                </div>
+                <div id="bookmodal_comment">
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<!-- 북마크 상세보기 모달 끝 -->
+<!-- Optional JavaScript; choose one of the two! -->
+<script>
+
+    $("#button_feed_list").click(function (){
+        $('#feed_list').css({
+            display : 'flex'
+        });
+        $('#like_feed_list').css({
+            display : 'none'
+        });
+        $('#bookmark_feed_list').css({
+            display : 'none'
+        });
+    });
+    $("#button_feed_like_list").click(function (){
+        $('#feed_list').css({
+            display : 'none'
+        });
+        $('#like_feed_list').css({
+            display : 'flex'
+        });
+        $('#bookmark_feed_list').css({
+            display : 'none'
+        });
+    });
+    $("#button_feed_bookmark_list").click(function (){
+        $('#feed_list').css({
+            display : 'none'
+        });
+        $('#like_feed_list').css({
+            display : 'none'
+        });
+        $('#bookmark_feed_list').css({
+            display : 'flex'
+        });
+    });
+
+
+
+    $(".modal_close").click(function () {
+        $('#first_modal').css({
+            display: 'none'
+        });
+        $('#second_modal').css({
+            display: 'none'
+        });
+    });
+
+    let files;
+
+    $('#nav_bar_add_box').click(function () {
+        $('#first_modal').css({
+            display: 'flex'
+        });
+
+        $(document.body).css({
+            overflow: 'hidden'
+        });
+
+    });
+
+    $('#feed_create_button').click(function () {
+        alert("공유하기 눌렀다.");
+
+        let file = files[0];
+        let image = files[0].name;
+        let content = $('#input_feed_content').val();
+
+        let fd = new FormData();
+
+        fd.append('file', file);
+        fd.append('image', image);
+        fd.append('content', content);
+
+        $.ajax({
+            url: "/content/upload",
+            data: fd,
+            method: "POST",
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                console.log("성공");
+            },
+            error: function (request, status, error) {
+                console.log("에러");
+            },
+            complete: function () {
+                console.log("완료");
+                location.replace("/main");
+            }
+        });
+    });
+
+    $('.img_upload_space')
+        .on("dragover", dragOver)
+        .on("dragleave", dragOver)
+        .on("drop", uploadFiles);
+
+    function dragOver(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (e.type == "dragover") {
+            $(e.target).css({
+                "background-color": "black",
+                "outline-offset": "-20px"
+            });
+        } else {
+            $(e.target).css({
+                "outline-offset": "-10px"
+            });
+        }
+    }
+
+    function uploadFiles(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        e.dataTransfer = e.originalEvent.dataTransfer; //2
+        files = e.target.files || e.dataTransfer.files;
+        console.log("뭔가 파일을 올렸네??" + files[0].name);
+        if (files.length > 1) {
+            alert('하나만 올려라.');
+            return;
+        }
+
+        if (files[0].type.match(/image.*/)) {
+
+
+
+            $('#first_modal').css({
+                display: 'none'
+            });
+            $('#second_modal').css({
+                display: 'flex'
+            });
+
+            $('.img_upload_space').css({
+                "background-image": "url(" + window.URL.createObjectURL(files[0]) + ")",
+                "outline": "none",
+                "background-size": "100%",
+                "background-repeat": "no-repeat",
+                "background-position": "center"
+            });
+        } else {
+            alert('이미지가 아닙니다.');
+            return;
+        }
+
+    }
+
+    $('#button_profile_upload').click(function (){
+        $('#input_fileupload').click();
+    });
+
+    function profile_upload(){
+        let file = $('#input_fileupload')[0].files[0];
+
+        let email = "{{ user.email }}";
+
+        let fd = new FormData();
+
+        fd.append('file', file);
+        fd.append('email', email);
+
+        $.ajax({
+            url: "/user/profile/upload",
+            data: fd,
+            method: "POST",
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                console.log("성공");
+            },
+            error: function (request, status, error) {
+                console.log("에러");
+            },
+            complete: function () {
+                console.log("완료");
+                location.replace("/content/profile");
+            }
+        });
+
+    }
+
+<!-- 수정하기 -->
+
+
+// Close modals on modal_close click
+$(".modal_close").click(function () {
+    $('#first_modify_modal').css({
+        display: 'none'
+    });
+    $('#second_modify_modal').css({
+        display: 'none'
+    });
+});
+
+// Open first_modify_modal on modify_button click
+$('#modify_button').click(function () {
+    // Close other modals if they are open
+    $('#feed_modal').css({
+        display: 'none'
+    });
+    console.log(img);
+    $('#existing_image').attr('src', img);
+    // Open the first_modify_modal
+    $('#second_modify_modal').css({
+        display: 'flex'
+    });
+
+    $(document.body).css({
+        overflow: 'hidden'
+    });
+
+    // Get the feed ID
+    let feedId = clickedFeedId;
+});
+
+// Open second_modify_modal on modify_feed_create_button click
+$('#modify_feed_create_button').click(function () {
+    alert("수정하기 눌렀다.");
+
+    // Assuming clickedFeedId is defined elsewhere in your code
+    let feedId = clickedFeedId;
+    let content = $('#input_modify_feed_content').val();
+
+    let fd = new FormData();
+    fd.append('feedId', feedId);
+    fd.append('content', content);
+
+    $.ajax({
+        url: "/content/modify", // Change the URL to the appropriate endpoint for modifying content
+        data: fd,
+        method: "POST",
+        processData: false,
+        contentType: false,
+        success: function (data) {
+            console.log("수정 성공");
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("수정 완료");
+            location.replace("/main");
+        }
+    });
+});
+
+
+<!-- 수정하기 끝 -->
+
+<!-- 삭제하기 -->
+$('#delete_button').click(function () {
+    // Assuming you have stored the feed ID somewhere in a variable (replace 'feedIdVariable' with the actual variable)
+    let feedId = clickedFeedId;
+
+    // Display a confirmation dialog
+    let isConfirmed = confirm('정말로 삭제하시겠습니까?');
+
+    // Check if the user confirmed
+    if (isConfirmed) {
+        // Make an AJAX request to the delete API endpoint
+        $.ajax({
+            url: "/content/delete",
+            method: "POST",
+            data: { feedId: feedId },
+            success: function (data) {
+                console.log("삭제 성공");
+                // Optionally, you can add logic to update the UI or navigate to another page after successful deletion
+            },
+            error: function (request, status, error) {
+                console.log("에러");
+                // Optionally, you can handle errors and display a message to the user
+            },
+            complete: function () {
+                console.log("삭제 완료");
+                location.replace("/main");
+                // Optionally, you can perform any actions after the request is complete
+            }
+        });
+    }
+});
+<!-- 삭제하기 끝 -->
+
+
+var clickedFeedId;
+var clickedLikeFeedId;
+var clickedBookmarkFeedId;
+var img;
+
+<!-- 내 게시물 상세보기 -->
+var feedList = [
+    {% for feed in feed_list %}
+        {
+            image: '{% get_media_prefix %}{{ feed.image }}',
+            content: '{{ feed.content|escapejs }}',
+            reply_list: [
+                {% for reply in feed.reply_list %}
+                    {
+                        reply_content: '{{ reply.reply_content|escapejs }}',
+                        nickname: '{{ reply.nickname|escapejs }}'
+                    },
+                {% endfor %}
+            ],
+            like_count: {{ feed.like_count }},
+
+            // Add is_liked property here
+            is_liked: {{ feed.is_liked|yesno:"true,false" }},
+        },
+    {% endfor %}
+];
+
+$('.content-feed').click(function () {
+    // Extract the unique identifier from the clicked element's class
+    var index = $(this).index();
+
+    // Store the clicked feed id
+
+    clickedFeedId = $('.feed-id').eq(index).val();
+
+    $('#feed_modal').css({
+        display: 'flex'
+    });
+    $(document.body).css({
+        overflow: 'hidden'
+    });
+
+    // Retrieve the clicked image source, content, and reply_list
+    var clickedImageSrc = feedList[index].image;
+    var clickedContent = feedList[index].content;
+    var clickedReplyList = feedList[index].reply_list;
+    var clickedLikeCount = feedList[index].like_count;
+
+    img =clickedImageSrc;
+
+    // Update the modal with the clicked image, content, and like_count
+    $('#modal_image').attr('src', clickedImageSrc);
+    $('#modal_content').text(clickedContent);
+    $('#modal_like_count').text(clickedLikeCount);  // Assuming you have a span/div for displaying like_count
+        // Check if the feed is liked and update the modal_favorite accordingly
+    if (feedList[index].is_liked) {
+        $('#modal_favorite').html('favorite');
+    } else {
+        $('#modal_favorite').html('favorite_border');
+    }
+    // Clear existing replies and append new ones
+    var $replyContainer = $('#modal_comment');
+    $replyContainer.empty();
+    for (var i = 0; i < clickedReplyList.length; i++) {
+        var replyContent = clickedReplyList[i].reply_content;
+        var nickname = clickedReplyList[i].nickname;
+        var replyHtml = '<div><strong>' + nickname + ':</strong> ' + replyContent + '</div>';
+        $replyContainer.append(replyHtml);
+    }
+
+    // Handle overflow
+    $(document.body).css({
+        overflow: 'hidden'
+    });
+});
+
+$('.modal_close').click(function () {
+    $('#feed_modal').css({
+        display: 'none'
+    });
+    $(document.body).css({
+        overflow: 'auto'
+    });
+});
+
+<!-- 내 게시물 상세보기 모달 끝 -->
+
+
+<!-- 좋아요 상세보기 모달 -->
+var likeFeedList = [
+    {% for feed in like_feed_list %}
+        {
+            id: {{ feed.id }},
+            image: '{% get_media_prefix %}{{ feed.image }}',
+            content: '{{ feed.content|escapejs }}',
+            reply_list: [
+                {% for reply in feed.reply_list %}
+                    {
+                        reply_content: '{{ reply.reply_content|escapejs }}',
+                        nickname: '{{ reply.nickname|escapejs }}'
+                    },
+                {% endfor %}
+            ],
+            like_count: {{ feed.like_count }},
+            is_liked: {{ feed.is_liked|yesno:"true,false" }},
+        },
+    {% endfor %}
+];
+
+var currentIndexLike = 0;
+
+
+$('.like_feed').click(function () {
+    // Extract the unique identifier from the clicked element's class
+    var index = $(this).index();
+    clickedLikeFeedId = $('.like_feed-id').eq(index).val();
+    $('#likefeed_modal').css({
+        display: 'flex'
+    });
+    $(document.body).css({
+        overflow: 'hidden'
+    });
+
+    // Retrieve the clicked image source, content, and reply_list
+    var clickedImageSrc = likeFeedList[index].image;
+    var clickedContent = likeFeedList[index].content;
+    var clickedReplyList = likeFeedList[index].reply_list;
+    var clickedLikeCount = likeFeedList[index].like_count;
+
+    // Update the modal with the clicked image, content, and like_count
+    $('#likemodal_image').attr('src', clickedImageSrc);
+    $('#likemodal_content').text(clickedContent);
+    $('#likemodal_like_count').text(clickedLikeCount);  // Assuming you have a span/div for displaying like_count
+
+    // Check if the feed is liked and update the likemodal_favorite accordingly
+    if (likeFeedList[index].is_liked) {
+        $('#likemodal_favorite').html('favorite');
+    } else {
+        $('#likemodal_favorite').html('favorite_border');
+    }
+
+    // Clear existing replies and append new ones
+    var $replyContainer = $('#likemodal_comment');
+    $replyContainer.empty();
+    for (var i = 0; i < clickedReplyList.length; i++) {
+        var replyContent = clickedReplyList[i].reply_content;
+        var nickname = clickedReplyList[i].nickname;
+        var replyHtml = '<div><strong>' + nickname + ':</strong> ' + replyContent + '</div>';
+        $replyContainer.append(replyHtml);
+    }
+
+    // Handle overflow
+    $(document.body).css({
+        overflow: 'hidden'
+    });
+});
+
+$('.modal_close').click(function () {
+    $('#likefeed_modal').css({
+        display: 'none'
+    });
+    $(document.body).css({
+        overflow: 'auto'
+    });
+});
+
+<!-- 좋아요 상세보기 모달 끝 -->
+
+<!-- 북마크 상세보기 모달 -->
+var bookmarkFeedList = [
+    {% for feed in bookmark_feed_list %}
+        {
+            image: '{% get_media_prefix %}{{ feed.image }}',
+            content: '{{ feed.content|escapejs }}',
+            reply_list: [
+                {% for reply in feed.reply_list %}
+                    {
+                        reply_content: '{{ reply.reply_content|escapejs }}',
+                        nickname: '{{ reply.nickname|escapejs }}'
+                    },
+                {% endfor %}
+            ],
+            like_count: {{ feed.like_count }},
+            is_liked: {{ feed.is_liked|yesno:"true,false" }},
+        },
+    {% endfor %}
+];
+
+$('.book_feed').click(function () {
+    // Extract the unique identifier from the clicked element's class
+    var index = $(this).index();
+    clickedBookmarkFeedId = $('.book_feed-id').eq(index).val();
+    $('#bookfeed_modal').css({
+        display: 'flex'
+    });
+    $(document.body).css({
+        overflow: 'hidden'
+    });
+
+    // Retrieve the clicked image source, content, and reply_list
+    var clickedImageSrc = bookmarkFeedList[index].image;
+    var clickedContent = bookmarkFeedList[index].content;
+    var clickedReplyList = bookmarkFeedList[index].reply_list;
+    var clickedLikeCount = likeFeedList[index].like_count;
+
+    if (likeFeedList[index].is_liked) {
+        $('#bookmodal_favorite').html('favorite');
+    } else {
+        $('#bookmodal_favorite').html('favorite_border');
+    }
+
+    // Update the modal with the clicked image and content
+    $('#bookmodal_image').attr('src', clickedImageSrc);
+    $('#bookmodal_content').text(clickedContent);
+    $('#bookmodal_like_count').text(clickedLikeCount);
+    // Clear existing replies and append new ones
+    var $replyContainer = $('#bookmodal_comment');
+    $replyContainer.empty();
+    for (var i = 0; i < clickedReplyList.length; i++) {
+        var replyContent = clickedReplyList[i].reply_content;
+        var nickname = clickedReplyList[i].nickname;
+        var replyHtml = '<div><strong>' + nickname + ':</strong> ' + replyContent + '</div>';
+        $replyContainer.append(replyHtml);
+    }
+
+    // Handle overflow
+    $(document.body).css({
+        overflow: 'hidden'
+    });
+});
+
+$('.modal_close').click(function () {
+    $('#bookfeed_modal').css({
+        display: 'none'
+    });
+    $(document.body).css({
+        overflow: 'auto'
+    });
+});
+
+<!-- 북마크 상세보기 모달 끝 -->
+
+<!-- 내 게시물 좋아요 -->
+$('#modal_favorite').click(function () {
+    // Handle liking/unliking in the modal
+    var feedId = clickedFeedId;  // Use the previously stored feed ID
+
+    // Get the text content of the span element
+<!--    var favoriteTextElement = document.getElementById('modal_favorite');-->
+
+
+    // Check if the feed is liked
+    var isLiked = $('#is_liked').val();
+
+    // Update the like count in the modal based on the current state
+    var modalLikeCountElement = $('#modal_like_count');
+    var currentLikeCount = parseInt(modalLikeCountElement.text());
+    let favorite_text = $.trim($('#modal_favorite').html());
+
+    if (favorite_text == 'favorite') {
+        // Feed is liked, send unlike request
+        $('#modal_favorite').html('favorite_border');
+        $('#modal_like_count').text(currentLikeCount - 1);
+    } else {
+        // Feed is not liked, send like request
+        $('#modal_favorite').html('favorite');
+        $('#modal_like_count').text(currentLikeCount + 1);
+    }
+
+    // Send AJAX request to like/unlike the feed
+    $.ajax({
+        url: "/content/like",  // Change the URL to your like/unlike endpoint
+        data: {
+            feed_id: feedId,
+            favorite_text: favorite_text
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("성공");
+            console.log(favorite_text)
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("완료");
+        }
+    });
+});
+<!-- 내 게시물 좋아요 끝 -->
+
+<!-- 좋아요 게시물 좋아요 -->
+$('#likemodal_favorite').click(function () {
+    // Handle liking/unliking in the modal
+    var feedId = clickedLikeFeedId;  // Use the previously stored feed ID
+
+    // Get the text content of the span element
+    var favoriteTextElement = $('#likemodal_favorite');
+
+    // Check if the feed is liked
+    var isLiked = $('#like_is_liked').val();
+
+    // Update the like count in the modal based on the current state
+    var modalLikeCountElement = $('#likemodal_like_count');
+    var currentLikeCount = parseInt(modalLikeCountElement.text());
+    let favorite_text = $.trim(favoriteTextElement.html());
+
+    if (favorite_text == 'favorite') {
+        // Feed is liked, send unlike request
+        favoriteTextElement.html('favorite_border');
+        modalLikeCountElement.text(currentLikeCount - 1);
+    } else {
+        // Feed is not liked, send like request
+        favoriteTextElement.html('favorite');
+        modalLikeCountElement.text(currentLikeCount + 1);
+    }
+
+    // Send AJAX request to like/unlike the feed
+    $.ajax({
+        url: "/content/like",  // Change the URL to your like/unlike endpoint
+        data: {
+            feed_id: feedId,
+            favorite_text: favorite_text
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("성공");
+            console.log(favorite_text);
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("완료");
+        }
+    });
+});
+<!-- 좋아요 게시물 좋아요 끝 -->
+
+
+<!-- 북마크 좋아요 -->
+$('#bookmodal_favorite').click(function () {
+    // Handle liking/unliking in the modal
+    var feedId = clickedBookmarkFeedId;  // Use the previously stored feed ID
+
+    // Get the text content of the span element
+    var favoriteTextElement = $('#bookmodal_favorite');
+
+    // Check if the feed is liked
+    var isLiked = $('#bookmark_is_liked').val();
+
+    // Update the like count in the modal based on the current state
+    var modalLikeCountElement = $('#bookmodal_like_count');
+    var currentLikeCount = parseInt(modalLikeCountElement.text());
+    let favoriteText = $.trim(favoriteTextElement.html());
+
+    if (favoriteText == 'favorite') {
+        // Feed is liked, send unlike request
+        favoriteTextElement.html('favorite_border');
+        modalLikeCountElement.text(currentLikeCount - 1);
+    } else {
+        // Feed is not liked, send like request
+        favoriteTextElement.html('favorite');
+        modalLikeCountElement.text(currentLikeCount + 1);
+    }
+
+    // Send AJAX request to like/unlike the feed
+    $.ajax({
+        url: "/content/like",  // Change the URL to your bookmark like/unlike endpoint
+        data: {
+            feed_id: feedId,
+            favorite_text: favoriteText
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("Success");
+            console.log(favoriteText);
+        },
+        error: function (request, status, error) {
+            console.log("Error");
+        },
+        complete: function () {
+            console.log("Complete");
+        }
+    });
+});
+<!-- 북마크 좋아요 끝 -->
+
+
+
+
+
+</script>
+
+
+<!-- Option 1: Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+
+<!-- Option 2: Separate Popper and Bootstrap JS -->
+<!--
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+-->
+</body>
+
+
+</html>
