@@ -71,10 +71,12 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light" style="position: fixed;width: 100%">
     <div class="container-fluid" style="justify-content: space-between;flex-wrap: nowrap; min-width: 1000px">
+        <input type="hidden" id="user-nickname" data-nickname="{{ user.nickname }}">
         <a class="navbar-brand" href="main"><img style="width: 100px"
                                               src="https://www.instagram.com/static/images/web/mobile_nav_type_logo-2x.png/1b47f9d0e595.png">
         </a>
-        <input class="form-control me-2" style="width: 400px" type="search" placeholder="Search" aria-label="Search">
+         <input class="form-control me-2" style="width: 400px" type="search" placeholder="Search" id="searchInput" aria-label="Search">
+        <button type="button" style="display : none" onclick="performSearch()">Search</button>
         <div style="display: flex">
             <a href="main" style="color: black"><span class="material-icons" style="padding-right: 10px">home</span></a>
             <span id="nav_bar_add_box" class="material-icons-outlined" style="padding-right: 10px">add_box</span>
@@ -115,9 +117,9 @@
             <div style="font-size: 26px; margin-right: 40px">
                 {{ user.nickname }}
             </div>
-            <button id="button_profile_upload" style="margin-right: 40px"> 프로필 사진 편집</button>
-            <input type="file" id="input_fileupload" onchange="profile_upload();" style="display: none" />
-            <span class="material-icons-outlined" style="margin-right: 40px">settings</span>
+            <button id="button_profile_upload" style="margin-right: 40px"><a href="/content/updateprofile"> 프로필 편집</a></button>
+<!--            <input type="file" id="input_fileupload" onchange="profile_upload();" style="display: none" />-->
+<!--            <span class="material-icons-outlined" style="margin-right: 40px"><a href="/content/updateprofile">settings</a></span>-->
         </div>
 
         <div style="margin-bottom: 20px">
@@ -1081,7 +1083,44 @@ $('#bookmodal_favorite').click(function () {
 <!-- 북마크 좋아요 끝 -->
 
 
+function performSearch() {
+    // 검색 입력란에서 값을 가져옵니다.
+    var searchValue = document.getElementById('searchInput').value;
+    var userNickname = document.getElementById('user-nickname').dataset.nickname;
+    console.log(userNickname);
 
+    // 검색어가 있을 경우 userprofile 페이지로 이동합니다.
+    if (searchValue.trim() !== '') {
+        if (userNickname !== searchValue) {
+            window.location.href = '/content/userprofile?q=' + encodeURIComponent(searchValue);
+            //서버에서 204 상태 코드를 반환했을 때(검색한 유저가 없을때)
+            fetch('/content/userprofile?q=' + encodeURIComponent(searchValue))
+                .then(response => {
+                    if (response.status === 204) {
+                        // 서버에서 204 상태 코드를 반환했을 때 alert 창을 띄움
+                        alert('피드 유저가 없습니다.');
+                    } else {
+                        // 다른 상태 코드에 대한 처리
+                        // 예: return response.json();
+                    }
+                })
+                .then(data => {
+                    // 위의 코드에서 return response.json();와 관련된 처리를 추가
+                })
+                .catch(error => console.error('에러 발생:', error));
+
+        } else {
+            window.location.href = '/content/profile';
+        }
+    }
+}
+
+// Enter 키를 눌렀을 때 검색 수행
+document.getElementById('searchInput').addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+        performSearch();
+    }
+});
 
 
 </script>

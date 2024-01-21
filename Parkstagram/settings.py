@@ -82,11 +82,11 @@ pymysql.install_as_MySQLdb()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'NAME': 'instagram',
+        'USER': 'instagram',
+        'PASSWORD': '!gustn12',
+        'HOST': 'localhost',
+        'PORT': '3306',
         'OPTIONS': {
             'init_command': 'SET sql_mode="STRICT_TRANS_TABLES"'
         }
@@ -148,3 +148,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # 커스텀 유저 모델 사용
 AUTH_USER_MODEL = 'user.User'
+APPEND_SLASH = False

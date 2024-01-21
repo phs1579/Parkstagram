@@ -1,14 +1,16 @@
 from uuid import uuid4
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from rest_framework.views import APIView
 from .models import Feed, Reply, Like, Bookmark
 from user.models import User
 import os
 from rest_framework import status
 from Parkstagram.settings import MEDIA_ROOT
+from django.db.models import Q
+from django.contrib.auth.hashers import make_password
 
 
 class Main(APIView):
@@ -276,6 +278,10 @@ class UserProfile(APIView):
         # 닉네임 쿼리 파라미터 가져오기
         other_nickname = request.GET.get('nickname', '')
 
+        # If 'q' parameter is present, update other_nickname
+        if 'q' in request.GET:
+            other_nickname = request.GET['q']
+
         email = request.session.get('email', None)
 
         if email is None:
@@ -287,6 +293,11 @@ class UserProfile(APIView):
             return render(request, "user/login.html")
 
         feed_user = User.objects.filter(nickname=other_nickname).first()
+
+        if feed_user is None:
+            # feed_user가 없을 때 현재 페이지를 새로고침
+            return HttpResponse(status=204)  # 204 No Content를 반환하여 페이지 이동 없음을 나타냄
+
         other_email = feed_user.email
         feed_list_with_replies = self.get_feed_list_with_replies(feed_user, other_email, email)
 
@@ -322,3 +333,71 @@ class UserProfile(APIView):
         return feed_list_with_replies
 
 
+class Updateprofile(APIView):
+    def get(self, request):
+        email = request.session.get('email', None)
+
+        if email is None:
+            return render(request, "user/login.html")
+
+        user = User.objects.filter(email=email).first()
+
+        if user is None:
+            print(f"User not found for email: {email}")
+            return render(request, "user/login.html")
+
+        return render(request, "content/updateprofile.html", context=dict(user=user))
+
+class UserProfileUpdateView(APIView):
+    template_name = 'content/updateprofile.html'  # Change this to the actual template path
+
+    def get(self, request):
+        email = request.session.get('email', None)
+
+        if email is None:
+            return redirect('login')  # Redirect to the login page or change the URL
+
+        user = User.objects.filter(email=email).first()
+
+        if user is None:
+            return redirect('login')  # Redirect to the login page or change the URL
+
+        return render(request, self.template_name, {'user': user})
+
+    def post(self, request):
+        email = request.session.get('email', None)
+
+        if email is None:
+            return redirect('login')  # Redirect to the login page or change the URL
+
+        user = User.objects.filter(email=email).first()
+
+        if user is None:
+            return redirect('login')  # Redirect to the login page or change the URL
+
+        # Update user fields based on the form data
+        user.name = request.POST.get('name', user.name)
+        user.nickname = request.POST.get('nickname', user.nickname)
+
+        # Handle profile image update
+
+        new_profile_image = request.FILES.get('input_fileupload')
+        if new_profile_image:
+            # Save the new profile image
+            uuid_name = uuid4().hex
+            save_path = os.path.join(MEDIA_ROOT, uuid_name)
+            with open(save_path, 'wb+') as destination:
+                for chunk in new_profile_image.chunks():
+                    destination.write(chunk)
+            user.profile_image = uuid_name
+
+        # Update password if provided
+        new_password = request.POST.get('password')
+        if new_password:
+            user.password = make_password(new_password)
+
+        # Save the changes
+        user.save()
+
+        # Redirect to the profile page or update success page
+        return redirect('content/updateprofile.html')  # Redirect to the profile page or change the URL
