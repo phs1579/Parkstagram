@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <!-- Google Icon -->
+    <link
+            href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+            rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="https://mblogthumb-phinf.pstatic.net/MjAxODA4MjBfMTYz/MDAxNTM0NzMxOTA1NzI5.iiZw2j9KPxorBAw1rDxzLH7DjLH4qL0rXPWjDfZDSUIg.VAddbzhp-eDEEqeLYjCNMbZDfIcgjs3GUMUZ8q9aiVgg.PNG.gaogirl/instagram_PNG9.png?type=w800">
+    <!-- Jquery -->
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+
+    <title>Parkstagram</title>
+
+    <style>
+        .box {
+            width: 150px;
+            height: 150px;
+            border-radius: 70%;
+            overflow: hidden;
+        }
+
+        .profile {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .feed_box {
+            margin: 20px 0;
+            border: solid 1px gray;
+            background-color: white
+        }
+
+        .modal_overlay {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(1.5px);
+            -webkit-backdrop-filter: blur(1.5px);
+            z-index: 10000;
+        }
+
+        .modal_window {
+            background: white;
+            backdrop-filter: blur(13.5px);
+            -webkit-backdrop-filter: blur(13.5px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            width: 800px;
+            height: 600px;
+            position: relative;
+            padding: 10px;
+        }
+            /* Add this CSS to your existing stylesheet or create a new one */
+
+        body {
+          margin: 0;
+          font-family: 'Arial', sans-serif; /* Set your preferred font */
+        }
+
+        nav {
+          box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle box shadow to the navigation bar */
+        }
+
+    /* Add this CSS to your existing stylesheet or create a new one */
+
+.main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.form-container {
+    width: 50%;
+    text-align: center;
+    margin: 20px auto; /* Added margin for spacing */
+    padding: 20px; /* Added padding for spacing */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+
+/* Style the form inputs */
+.input_update {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+}
+
+/* Style the labels */
+.item__title {
+    display: block;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+/* Style the submit button */
+#btn_update {
+    background-color: #007bff;
+    color: #fff;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#btn_update:hover {
+    background-color: #0056b3;
+}
+
+
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="position: fixed;width: 100%; z-index: 999">
+    <div class="container-fluid" style="justify-content: space-between;flex-wrap: nowrap; min-width: 1000px">
+        <input type="hidden" id="user-nickname" data-nickname="{{ user.nickname }}">
+        <a class="navbar-brand" href="main"><img style="width: 100px"
+                                                 src="https://www.instagram.com/static/images/web/mobile_nav_type_logo-2x.png/1b47f9d0e595.png">
+        </a>
+        <input class="form-control me-2" style="width: 400px" type="search" placeholder="Search" id="searchInput" aria-label="Search">
+        <button type="button" style="display : none" onclick="performSearch()">Search</button>
+        <div style="display: flex">
+            <a href="main" style="color: black"><span class="material-icons"
+                                                      style="padding-right: 10px"> home</span></a>
+            <span id="nav_bar_add_box" class="material-icons-outlined" style="padding-right: 10px">add_box</span>
+
+            <div class="dropdown">
+                <a href="#" role="button" id="dropdownMenuLink"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="box" style="width: 25px; height: 25px">
+
+                        <img class="profile"
+                             src="{% get_media_prefix %}{{ user.profile_image }}">
+
+                    </div>
+                </a>
+
+                <ul class="dropdown-menu" style="left:-158px" aria-labelledby="dropdownMenuLink">
+                    <li><a class="dropdown-item" href="/content/profile">프로필</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="/user/logout">로그아웃</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+</head>
+<!--프로필셋팅 메인-->
+<main class="main">
+    <div class="form-container">
+        <form id="updateProfileForm" action="/content/userupdate/" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="id" id="id">
+            <div class="content-item__01">
+                <label for="email" class="item__title">이메일</label>
+                <div class="item__input">
+                    <input class="input_update" type="text" name="email" id="email" readonly="readonly" value="{{ user.email }}">
+                </div>
+            </div>
+
+            <div class="content-item__02">
+                <label class="item__title">프로필 사진</label>
+                <div class="item__input">
+                    <button id="button_profile_upload">프로필 편집</button>
+                    <img id="profile_preview" src="{% get_media_prefix %}{{ user.profile_image }}" alt="Profile Preview" style="max-width: 100px; max-height: 100px;">
+                    <input type="file" id="input_fileupload" name="input_fileupload" style="display: none">
+                </div>
+            </div>
+
+            <div class="content-item__03">
+                <label for="name" class="item__title">이름</label>
+                <div class="item__input">
+                    <input class="input_update" type="text" name="name" id="name" placeholder="유저네임" required="required" value="{{ user.name }}">
+                </div>
+            </div>
+
+            <div class="content-item__04">
+                <label for="nickname" class="item__title">닉네임</label>
+                <div class="item__input">
+                    <input class="input_update" type="text" name="nickname" id="nickname" placeholder="유저닉네임" value="{{ user.nickname }}" required="required">
+                </div>
+            </div>
+
+            <div class="content-item__05">
+                <label for="password" class="item__title">패스워드</label>
+                <div class="item__input">
+                    <input class="input_update" type="password" name="password" id="password" placeholder="패스워드" required="required">
+                </div>
+            </div>
+
+            <!--제출버튼-->
+            <div class="content-item__6">
+                <div class="item__input">
+                    <button id="btn_update">제출</button>
+                </div>
+            </div>
+            <!--제출버튼end-->
+        </form>
+        <!--프로필수정 form end-->
+    </div>
+</main>
+
+
+
+<!-- 첫번째 모달 -->
+<div id="first_modal" class="modal_overlay">
+    <div class="modal_window">
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div>
+
+            </div>
+            <div>
+                새 이미지 업로드
+            </div>
+            <div>
+                <span class="modal_close material-icons-outlined">close</span>
+            </div>
+        </div>
+
+        <div class="img_upload_space" style="border-top: solid 1px gray;width: 778px; height: 540px;margin-top: 10px">
+
+        </div>
+    </div>
+</div>
+
+<!-- 두번째 모달 -->
+<div id="second_modal" class="modal_overlay">
+    <div class="modal_window">
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div>
+
+            </div>
+            <div>
+                새 이미지 업로드
+            </div>
+            <div>
+                <span class="modal_close material-icons-outlined">close</span>
+            </div>
+        </div>
+
+        <div style="border-top: solid 1px gray;display: flex; flex-direction: row;margin-top: 10px">
+            <div class="img_upload_space" style="width: 500px; height: 540px;">
+
+            </div>
+            <div style="border-left: solid 1px gray">
+                <div>
+                    <textarea id="input_feed_content" class="form-control" style="width: 276px; height: 400px"
+                              id="exampleFormControlTextarea1" rows="5"></textarea>
+                </div>
+                <button id="feed_create_button" type="button" class="btn btn-primary" style="width: 100%">
+                    공유하기
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+</body>
+<!-- Option 1: Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+
+<!-- Option 2: Separate Popper and Bootstrap JS -->
+<!--
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+-->
+<!-- Optional JavaScript; choose one of the two! -->
+<script>
+
+
+    $(".modal_close").click(function () {
+        $('#first_modal').css({
+            display: 'none'
+        });
+        $('#second_modal').css({
+            display: 'none'
+        });
+    });
+
+    let files;
+
+    $('#nav_bar_add_box').click(function () {
+        $('#first_modal').css({
+            display: 'flex'
+        });
+
+        $(document.body).css({
+            overflow: 'hidden'
+        });
+
+    });
+
+    $('#feed_create_button').click(function () {
+        alert("공유하기 눌렀다.");
+
+        let file = files[0];
+        let image = files[0].name;
+        let content = $('#input_feed_content').val();
+
+        let fd = new FormData();
+
+        fd.append('file', file);
+        fd.append('image', image);
+        fd.append('content', content);
+
+        $.ajax({
+            url: "/content/upload",
+            data: fd,
+            method: "POST",
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                console.log("성공");
+            },
+            error: function (request, status, error) {
+                console.log("에러");
+            },
+            complete: function () {
+                console.log("완료");
+                location.replace("/main");
+            }
+        });
+    });
+
+    $('.img_upload_space')
+        .on("dragover", dragOver)
+        .on("dragleave", dragOver)
+        .on("drop", uploadFiles);
+
+    function dragOver(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (e.type == "dragover") {
+            $(e.target).css({
+                "background-color": "black",
+                "outline-offset": "-20px"
+            });
+        } else {
+            $(e.target).css({
+                "outline-offset": "-10px"
+            });
+        }
+    }
+
+    function uploadFiles(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        e.dataTransfer = e.originalEvent.dataTransfer; //2
+        files = e.target.files || e.dataTransfer.files;
+        console.log("뭔가 파일을 올렸네??" + files[0].name);
+        if (files.length > 1) {
+            alert('하나만 올려라.');
+            return;
+        }
+
+        if (files[0].type.match(/image.*/)) {
+
+            $('#first_modal').css({
+                display: 'none'
+            });
+            $('#second_modal').css({
+                display: 'flex'
+            });
+
+            $('.img_upload_space').css({
+                "background-image": "url(" + window.URL.createObjectURL(files[0]) + ")",
+                "outline": "none",
+                "background-size": "100%",
+                "background-repeat": "no-repeat",
+                "background-position": "center"
+            });
+        } else {
+            alert('이미지가 아닙니다.');
+            return;
+        }
+
+    }
+    $('#button_profile_upload').click(function (){
+        $('#input_fileupload').click();
+    });
+
+function performSearch() {
+    // 검색 입력란에서 값을 가져옵니다.
+    var searchValue = document.getElementById('searchInput').value;
+    var userNickname = document.getElementById('user-nickname').dataset.nickname;
+    console.log(userNickname);
+
+    // 검색어가 있을 경우 userprofile 페이지로 이동합니다.
+    if (searchValue.trim() !== '') {
+        if (userNickname !== searchValue) {
+            window.location.href = '/content/userprofile?q=' + encodeURIComponent(searchValue);
+            //서버에서 204 상태 코드를 반환했을 때(검색한 유저가 없을때)
+            fetch('/content/userprofile?q=' + encodeURIComponent(searchValue))
+                .then(response => {
+                    if (response.status === 204) {
+                        // 서버에서 204 상태 코드를 반환했을 때 alert 창을 띄움
+                        alert('피드 유저가 없습니다.');
+                    } else {
+                        // 다른 상태 코드에 대한 처리
+                        // 예: return response.json();
+                    }
+                })
+                .then(data => {
+                    // 위의 코드에서 return response.json();와 관련된 처리를 추가
+                })
+                .catch(error => console.error('에러 발생:', error));
+
+        } else {
+            window.location.href = '/content/profile';
+        }
+    }
+}
+
+// Enter 키를 눌렀을 때 검색 수행
+document.getElementById('searchInput').addEventListener('keyup', function(event) {
+    if (event.key === 'Enter') {
+        performSearch();
+    }
+});
+// 프로필 미리보기
+ // 프로필 미리보기
+        var fileInput = document.getElementById('input_fileupload');
+        var profilePreview = document.getElementById('profile_preview');
+
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files && fileInput.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    profilePreview.src = e.target.result;
+                };
+
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        });
+
+        // Reset the image preview when the button is clicked
+        document.getElementById('button_profile_upload').addEventListener('click', function () {
+            profilePreview.src = '{% get_media_prefix %}{{ user.profile_image }}'; // Replace with the default image source or a transparent image source
+        });
+
+
+// 프로필 업데이트
+$(document).ready(function () {
+    // Function to handle profile image preview
+    function profile_upload() {
+        var input = document.getElementById('input_fileupload');
+        var preview = document.getElementById('profile_preview');
+
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block'; // Show the image preview
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Reset the image preview when the file input changes
+    $('#input_fileupload').change(function () {
+<!--        $('#profile_preview').hide();-->
+    });
+
+    // Handle form submission
+    $('#btn_update').click(function () {
+        // Create FormData object to send files
+        var formData = new FormData($('#updateProfileForm')[0]);
+
+        // Perform Ajax request
+        $.ajax({
+            url: "/content/userupdate/",
+            method: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                console.log("Profile updated successfully!");
+                window.location.href = '/profile';
+            },
+            error: function (xhr, status, error) {
+                console.error("Error during profile update:", error);
+            }
+        });
+    });
+});
+
+
+
+
+</script>
