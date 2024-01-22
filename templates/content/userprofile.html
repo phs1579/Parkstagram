@@ -66,6 +66,12 @@
             position: relative;
             padding: 10px;
         }
+            #modal_comment, #likemodal_comment, #bookmodal_comment {
+                max-height: 100px;  /* Set the maximum height for the div */
+                overflow:scroll;   /* Enable vertical scrolling if content overflows */
+                border: 1px solid #ccc;  /* Optional: Add a border for better visibility */
+                padding: 10px;  /* Optional: Add padding for better styling */
+            }
     </style>
 </head>
 <body>
@@ -224,7 +230,7 @@
             <div style="border-left: solid 1px gray">
                 <div id="modal_content" style="width: 276px; height: 100px"></div>
                 <div id="modal_comment"></div>
-                <div>
+                <div style="bottom : 35px; position : fixed;">
                     <span id="modal_favorite" class="modal_favorite material-icons-outlined"
                           style="color: red; cursor: pointer">
                         <!-- Display different icons based on whether the user liked the feed or not -->
@@ -236,7 +242,7 @@
                     </span>
                     <b id="modal_like_count"></b>
                 </div>
-                <div style="display:flex;flex-direction: row;align-items: center; border-top: solid 1px gray ">
+                <div style="display:flex;flex-direction: row;align-items: center; border-top: solid 1px gray; position : absolute; bottom : 0;">
                     <input id="reply_{{ feed.id }}" type="text" class="form-control"
                            style="box-shadow: none; border: none; outline: none"
                            placeholder="댓글 달기..">

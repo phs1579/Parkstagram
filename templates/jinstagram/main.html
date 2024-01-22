@@ -147,10 +147,10 @@
                 <div style="margin: 0 20px;text-align: left;font-size: 14px"> 춘식이 외 <b id="like_count_{{ feed.id }}"> {{ feed.like_count }}</b>명 이
                     좋아합니다.
                 </div>
-                <div style="margin: 0 20px;text-align: left;font-size: 16px">
+                <div style="margin: 0 20px;text-align: left;font-size: 16px;">
                     <b>{{ feed.nickname }}</b> {{ feed.content }}
                 </div>
-                <div id="reply_list_{{ feed.id }}">
+                <div id="reply_list_{{ feed.id }}" style ="max-height: 65px; overflow:scroll;">
                     {% for reply in feed.reply_list %}
                         <div style="margin: 0 20px;text-align: left;font-size: 14px">
                             <b>{{ reply.nickname }}</b> {{ reply.reply_content }}</div>
@@ -301,7 +301,7 @@
         <div style="margin-top: 40px;font-size: 12px;color: gray; text-align: left"> 소개 도움말 홍보센터 API <br> 개인정보처리방침 약관 위치
             인기 계정 해시태그 언어
         </div>
-        <div style="margin-top: 20px;font-size: 12px;color: gray; text-align: left"> 2021 인스타그램 프롬 페이스북</div>
+        <div style="margin-top: 20px;font-size: 12px;color: gray; text-align: left"> 2024 인스타그램 프롬 페이스북</div>
 
     </div>
 </div>
