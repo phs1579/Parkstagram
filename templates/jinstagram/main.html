@@ -364,52 +364,56 @@
 <!-- Optional JavaScript; choose one of the two! -->
 <script>
 
-    $(".bookmark").click(function (event) {
-        let feed_id = event.target.attributes.getNamedItem('feed_id').value;
-        let bookmark_id = event.target.id;
-        let bookmark_text = $.trim($('#' + bookmark_id).html());
-        if (bookmark_text == 'bookmark') {
-            $('#' + bookmark_id).html('bookmark_border');
-        } else {
-            $('#' + bookmark_id).html('bookmark');
+ // 즐겨찾기 버튼 클릭 이벤트 핸들러
+$(".bookmark").click(function (event) {
+    let feed_id = event.target.attributes.getNamedItem('feed_id').value;
+    let bookmark_id = event.target.id;
+    let bookmark_text = $.trim($('#' + bookmark_id).html());
+
+    // 즐겨찾기 상태 변경
+    if (bookmark_text == 'bookmark') {
+        $('#' + bookmark_id).html('bookmark_border');
+    } else {
+        $('#' + bookmark_id).html('bookmark');
+    }
+
+    // 즐겨찾기 상태를 서버에 전송
+    $.ajax({
+        url: "/content/bookmark",
+        data: {
+            feed_id: feed_id,
+            bookmark_text: bookmark_text
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("성공");
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("완료");
         }
-
-        $.ajax({
-            url: "/content/bookmark",
-            data: {
-                feed_id: feed_id,
-                bookmark_text: bookmark_text
-            },
-            method: "POST",
-            success: function (data) {
-                console.log("성공");
-            },
-            error: function (request, status, error) {
-                console.log("에러");
-            },
-            complete: function () {
-                console.log("완료");
-            }
-        });
     });
+});
 
-
-    $(".favorite").click(function (event) {
+// 좋아요 버튼 클릭 이벤트 핸들러
+$(".favorite").click(function (event) {
     let feed_id = event.target.attributes.getNamedItem('feed_id').value;
     let favorite_id = event.target.id;
     let likeCountElement = $('#like_count_' + feed_id);
-
     let favorite_text = $.trim($('#' + favorite_id).html());
+
+    // 좋아요 상태 변경
     if (favorite_text == 'favorite') {
         $('#' + favorite_id).html('favorite_border');
-        // 좋아요 취소 시, 좋아요 수 감소
         likeCountElement.text(parseInt(likeCountElement.text()) - 1);
     } else {
         $('#' + favorite_id).html('favorite');
-        // 좋아요 클릭 시, 좋아요 수 증가
         likeCountElement.text(parseInt(likeCountElement.text()) + 1);
     }
 
+    // 좋아요 상태를 서버에 전송
     $.ajax({
         url: "/content/like",
         data: {
@@ -429,152 +433,110 @@
     });
 });
 
+// 댓글 등록 버튼 클릭 이벤트 핸들러
+$(".upload_reply").click(function (event) {
+    let feed_id = event.target.attributes.getNamedItem('feed_id').value;
+    let reply_id = 'reply_' + feed_id;
+    let reply_content = $('#' + reply_id).val();
 
-    $(".upload_reply").click(function (event) {
-        let feed_id = event.target.attributes.getNamedItem('feed_id').value;
-        let reply_id = 'reply_' + feed_id;
-        let reply_content = $('#' + reply_id).val();
+    // 댓글 내용 확인
+    if (reply_content.length <= 0) {
+        alert("댓글을 입력하세요");
+        return 0;
+    }
 
-        if (reply_content.length <= 0) {
-            alert("댓글을 입력하세요");
-            return 0;
+    // 서버에 댓글 전송
+    $.ajax({
+        url: "/content/reply",
+        data: {
+            feed_id: feed_id,
+            reply_content: reply_content
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("성공");
+            alert("댓글 성공");
+            $("#reply_list_" + feed_id).append("<div style='margin: 0 20px;text-align: left;font-size: 14px'><b>{{ user.nickname }}</b> " + reply_content + "</div>")
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("완료");
+            $('#' + reply_id).val('');
         }
-
-        $.ajax({
-            url: "/content/reply",
-            data: {
-                feed_id: feed_id,
-                reply_content: reply_content
-            },
-            method: "POST",
-            success: function (data) {
-                console.log("성공");
-                alert("댓글 성공");
-                $("#reply_list_" + feed_id).append("<div style='margin: 0 20px;text-align: left;font-size: 14px'><b>{{ user.nickname }}</b> " + reply_content + "</div>")
-                {#location.replace('/main');#}
-
-            },
-            error: function (request, status, error) {
-                console.log("에러");
-            },
-            complete: function () {
-                console.log("완료");
-                $('#' + reply_id).val('');
-            }
-        });
-
     });
+});
 
-    $(".modal_close").click(function () {
+// 모달 닫기 버튼 클릭 이벤트 핸들러
+$(".modal_close").click(function () {
+    $('#first_modal').css({
+        display: 'none'
+    });
+    $('#second_modal').css({
+        display: 'none'
+    });
+});
+
+// 파일 드래그 앤 드롭 이벤트 핸들러
+let files;
+
+$('.img_upload_space')
+    .on("dragover", dragOver)
+    .on("dragleave", dragOver)
+    .on("drop", uploadFiles);
+
+function dragOver(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (e.type == "dragover") {
+        $(e.target).css({
+            "background-color": "black",
+            "outline-offset": "-20px"
+        });
+    } else {
+        $(e.target).css({
+            "outline-offset": "-10px"
+        });
+    }
+}
+
+function uploadFiles(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    e.dataTransfer = e.originalEvent.dataTransfer;
+    files = e.target.files || e.dataTransfer.files;
+    console.log("뭔가 파일을 올렸네??" + files[0].name);
+
+    if (files.length > 1) {
+        alert('하나만 올려라.');
+        return;
+    }
+
+    if (files[0].type.match(/image.*/)) {
         $('#first_modal').css({
             display: 'none'
         });
         $('#second_modal').css({
-            display: 'none'
-        });
-    });
-
-    let files;
-
-    $('#nav_bar_add_box').click(function () {
-        $('#first_modal').css({
             display: 'flex'
         });
 
-        $(document.body).css({
-            overflow: 'hidden'
+        $('.img_upload_space').css({
+            "background-image": "url(" + window.URL.createObjectURL(files[0]) + ")",
+            "outline": "none",
+            "background-size": "100%",
+            "background-repeat": "no-repeat",
+            "background-position": "center"
         });
-
-    });
-
-    $('#feed_create_button').click(function () {
-        alert("공유하기 눌렀다.");
-
-        let file = files[0];
-        let image = files[0].name;
-        let content = $('#input_feed_content').val();
-
-        let fd = new FormData();
-
-        fd.append('file', file);
-        fd.append('image', image);
-        fd.append('content', content);
-
-        $.ajax({
-            url: "/content/upload",
-            data: fd,
-            method: "POST",
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                console.log("성공");
-            },
-            error: function (request, status, error) {
-                console.log("에러");
-            },
-            complete: function () {
-                console.log("완료");
-                location.replace("/main");
-            }
-        });
-    });
-
-    $('.img_upload_space')
-        .on("dragover", dragOver)
-        .on("dragleave", dragOver)
-        .on("drop", uploadFiles);
-
-    function dragOver(e) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        if (e.type == "dragover") {
-            $(e.target).css({
-                "background-color": "black",
-                "outline-offset": "-20px"
-            });
-        } else {
-            $(e.target).css({
-                "outline-offset": "-10px"
-            });
-        }
+    } else {
+        alert('이미지가 아닙니다.');
+        return;
     }
+}
 
-    function uploadFiles(e) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        e.dataTransfer = e.originalEvent.dataTransfer; //2
-        files = e.target.files || e.dataTransfer.files;
-        console.log("뭔가 파일을 올렸네??" + files[0].name);
-        if (files.length > 1) {
-            alert('하나만 올려라.');
-            return;
-        }
-
-        if (files[0].type.match(/image.*/)) {
-
-            $('#first_modal').css({
-                display: 'none'
-            });
-            $('#second_modal').css({
-                display: 'flex'
-            });
-
-            $('.img_upload_space').css({
-                "background-image": "url(" + window.URL.createObjectURL(files[0]) + ")",
-                "outline": "none",
-                "background-size": "100%",
-                "background-repeat": "no-repeat",
-                "background-position": "center"
-            });
-        } else {
-            alert('이미지가 아닙니다.');
-            return;
-        }
-
-    }
-
+// 검색 수행 함수
 function performSearch() {
     // 검색 입력란에서 값을 가져옵니다.
     var searchValue = document.getElementById('searchInput').value;
@@ -584,24 +546,21 @@ function performSearch() {
     // 검색어가 있을 경우 userprofile 페이지로 이동합니다.
     if (searchValue.trim() !== '') {
         if (userNickname !== searchValue) {
+
             window.location.href = '/content/userprofile?q=' + encodeURIComponent(searchValue);
-            //서버에서 204 상태 코드를 반환했을 때(검색한 유저가 없을때)
+            // 서버에 닉네임 검색후 값이 없다면 204 반환
             fetch('/content/userprofile?q=' + encodeURIComponent(searchValue))
                 .then(response => {
                     if (response.status === 204) {
-                        // 서버에서 204 상태 코드를 반환했을 때 alert 창을 띄움
                         alert('피드 유저가 없습니다.');
-                    } else {
-                        // 다른 상태 코드에 대한 처리
-                        // 예: return response.json();
                     }
                 })
                 .then(data => {
-                    // 위의 코드에서 return response.json();와 관련된 처리를 추가
+                    // 검색 결과 처리
                 })
                 .catch(error => console.error('에러 발생:', error));
-
         } else {
+            // 자신의 프로필로 이동
             window.location.href = '/content/profile';
         }
     }
@@ -613,6 +572,7 @@ document.getElementById('searchInput').addEventListener('keyup', function(event)
         performSearch();
     }
 });
+
 
 
 

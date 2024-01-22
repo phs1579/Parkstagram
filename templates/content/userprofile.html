@@ -222,7 +222,8 @@
                 <img id="modal_image" style="width: 500px; height: 500px; object-fit: cover">
             </div>
             <div style="border-left: solid 1px gray">
-                <div id="modal_content" style="width: 276px; height: 400px"></div>
+                <div id="modal_content" style="width: 276px; height: 100px"></div>
+                <div id="modal_comment"></div>
                 <div>
                     <span id="modal_favorite" class="modal_favorite material-icons-outlined"
                           style="color: red; cursor: pointer">
@@ -235,8 +236,16 @@
                     </span>
                     <b id="modal_like_count"></b>
                 </div>
+                <div style="display:flex;flex-direction: row;align-items: center; border-top: solid 1px gray ">
+                    <input id="reply_{{ feed.id }}" type="text" class="form-control"
+                           style="box-shadow: none; border: none; outline: none"
+                           placeholder="댓글 달기..">
+                    <div feed_id="{{ feed.id }}" class="upload_reply"
+                         style="width: 50px;color: cornflowerblue; font-weight: bold">
+                        게시
+                    </div>
+                </div>
 
-                <div id="modal_comment"></div>
             </div>
         </div>
     </div>
@@ -567,6 +576,42 @@ document.getElementById('searchInput').addEventListener('keyup', function(event)
     if (event.key === 'Enter') {
         performSearch();
     }
+});
+
+// 내 게시물 댓글 등록 버튼 클릭 이벤트 핸들러
+$(".upload_reply").click(function (event) {
+    let feed_id = event.target.attributes.getNamedItem('feed_id').value;
+    let reply_id = 'reply_' + feed_id;
+    let reply_content = $('#' + reply_id).val();
+    var feed__id = clickedFeedId;
+    var userNickname = "{{ user.nickname|default:'' }}";
+    // 댓글 내용 확인
+    if (reply_content.length <= 0) {
+        alert("댓글을 입력하세요");
+        return 0;
+    }
+
+    // 서버에 댓글 전송
+    $.ajax({
+        url: "/content/reply",
+        data: {
+            feed_id: feed__id,
+            reply_content: reply_content
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("성공");
+            alert("댓글 성공");
+            $("#modal_comment").append('<div><strong>' + userNickname + ':</strong> ' + reply_content + '</div>');
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("완료");
+            $('#' + reply_id).val('');
+        }
+    });
 });
 
 </script>

@@ -185,7 +185,7 @@
             <div class="content-item__02">
                 <label class="item__title">프로필 사진</label>
                 <div class="item__input">
-                    <button id="button_profile_upload">프로필 편집</button>
+                    <a href="#" style="text-decoration-line: none;" id="button_profile_upload">프로필 편집</a>
                     <img id="profile_preview" src="{% get_media_prefix %}{{ user.profile_image }}" alt="Profile Preview" style="max-width: 100px; max-height: 100px;">
                     <input type="file" id="input_fileupload" name="input_fileupload" style="display: none">
                 </div>
@@ -446,7 +446,7 @@ document.getElementById('searchInput').addEventListener('keyup', function(event)
         performSearch();
     }
 });
-// 프로필 미리보기
+
  // 프로필 미리보기
         var fileInput = document.getElementById('input_fileupload');
         var profilePreview = document.getElementById('profile_preview');
@@ -507,12 +507,13 @@ $(document).ready(function () {
             processData: false,
             success: function (data) {
                 console.log("Profile updated successfully!");
-                window.location.href = '/profile';
             },
             error: function (xhr, status, error) {
                 console.error("Error during profile update:", error);
             }
         });
+        alert("수정이 완료 되었습니다!");
+        window.location.reload();
     });
 });
 

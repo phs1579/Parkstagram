@@ -66,6 +66,13 @@
             position: relative;
             padding: 10px;
         }
+
+            #modal_comment, #likemodal_comment, #bookmodal_comment {
+                max-height: 300px;  /* Set the maximum height for the div */
+                overflow-y: auto;  /* Enable vertical scrolling if content overflows */
+                border: 1px solid #ccc;  /* Optional: Add a border for better visibility */
+                padding: 10px;  /* Optional: Add padding for better styling */
+            }
     </style>
 </head>
 <body>
@@ -117,7 +124,7 @@
             <div style="font-size: 26px; margin-right: 40px">
                 {{ user.nickname }}
             </div>
-            <button id="button_profile_upload" style="margin-right: 40px"><a href="/content/updateprofile"> 프로필 편집</a></button>
+            <button id="button_profile_upload"  class="btn btn-secondary" style="margin-right: 40px"><a href="/content/updateprofile" style="text-decoration-line: none; color : black;"> 프로필 편집</a></button>
 <!--            <input type="file" id="input_fileupload" onchange="profile_upload();" style="display: none" />-->
 <!--            <span class="material-icons-outlined" style="margin-right: 40px"><a href="/content/updateprofile">settings</a></span>-->
         </div>
@@ -277,7 +284,19 @@
 <div id="feed_modal" class="modal_overlay">
     <div class="modal_window">
         <div style="display: flex; flex-direction: row; justify-content: space-between">
-            <div></div>
+            <div>
+                <div class="dropdown">
+                    <span class="material-icons" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                        more_horiz
+                    </span>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" id="modify_button">수정하기</a></li>
+                    <li><a class="dropdown-item" href="#" id="delete_button">삭제하기</a></li>
+                  </ul>
+                </div>
+
+            </div>
             <div>상세보기</div>
             <div>
                 <span class="modal_close material-icons-outlined">close</span>
@@ -289,7 +308,9 @@
                 <img id="modal_image" style="width: 500px; height: 500px; object-fit: cover">
             </div>
             <div style="border-left: solid 1px gray">
-                <div id="modal_content" style="width: 276px; height: 400px"></div>
+                <div id="modal_content" style="width: 276px; height: 100px;"></div>
+                <div></div>
+                <div id="modal_comment"></div>
                 <div>
                     <span id="modal_favorite" class="modal_favorite material-icons-outlined"
                           style="color: red; cursor: pointer">
@@ -303,10 +324,15 @@
                     <b id="modal_like_count"></b>
                 </div>
 
-                <div id="modal_comment"></div>
-                <div>
-                    <button id="modify_button">수정하기</button>
-                    <button id="delete_button">삭제하기</button>
+
+                <div style="display:flex;flex-direction: row;align-items: center; border-top: solid 1px gray ">
+                    <input id="reply_{{ feed.id }}" type="text" class="form-control"
+                           style="box-shadow: none; border: none; outline: none"
+                           placeholder="댓글 달기..">
+                    <div feed_id="{{ feed.id }}" class="upload_reply"
+                         style="width: 50px;color: cornflowerblue; font-weight: bold">
+                        게시
+                    </div>
                 </div>
             </div>
         </div>
@@ -336,9 +362,10 @@
                 <img id="likemodal_image" style="width: 500px; height: 500px; object-fit: cover">
             </div>
             <div style="border-left: solid 1px gray">
-                <div id="likemodal_content" style="width: 276px; height: 400px">
+                <div id="likemodal_content" style="width: 276px; height: 100px">
 
                 </div>
+                 <div id="likemodal_comment"></div>
                 <div>
                     <span id="likemodal_favorite" class="modal_favorite material-icons-outlined"
                           style="color: red; cursor: pointer">
@@ -351,8 +378,15 @@
                     </span>
                     <b id="likemodal_like_count"></b>
                 </div>
-                <div id="likemodal_comment">
-
+                    <div style="display:flex;flex-direction: row;align-items: center; border-top: solid 1px gray ">
+                    <input id="likereply_{{ feed.id }}" type="text" class="form-control"
+                           style="box-shadow: none; border: none; outline: none"
+                           placeholder="댓글 달기..">
+                    <div feed_id="{{ feed.id }}" class="likeupload_reply"
+                         style="width: 50px;color: cornflowerblue; font-weight: bold">
+                        게시
+                    </div>
+                </div>
                 </div>
             </div>
 
@@ -382,9 +416,10 @@
                 <img id="bookmodal_image" style="width: 500px; height: 500px; object-fit: cover">
             </div>
             <div style="border-left: solid 1px gray">
-                <div id="bookmodal_content" style="width: 276px; height: 400px">
+                <div id="bookmodal_content" style="width: 276px; height: 100px">
 
                 </div>
+                <div id="bookmodal_comment"></div>
                  <div>
                     <span id="bookmodal_favorite" class="modal_favorite material-icons-outlined"
                           style="color: red; cursor: pointer">
@@ -397,7 +432,15 @@
                     </span>
                     <b id="bookmodal_like_count"></b>
                 </div>
-                <div id="bookmodal_comment">
+                    <div style="display:flex;flex-direction: row;align-items: center; border-top: solid 1px gray ">
+                    <input id="bookreply_{{ feed.id }}" type="text" class="form-control"
+                           style="box-shadow: none; border: none; outline: none"
+                           placeholder="댓글 달기..">
+                    <div feed_id="{{ feed.id }}" class="bookupload_reply"
+                         style="width: 50px;color: cornflowerblue; font-weight: bold">
+                        게시
+                    </div>
+                </div>
 
                 </div>
             </div>
@@ -708,6 +751,7 @@ var feedList = [
             reply_list: [
                 {% for reply in feed.reply_list %}
                     {
+                        id : '{{ reply.id|escapejs }}',
                         reply_content: '{{ reply.reply_content|escapejs }}',
                         nickname: '{{ reply.nickname|escapejs }}'
                     },
@@ -1120,6 +1164,115 @@ document.getElementById('searchInput').addEventListener('keyup', function(event)
     if (event.key === 'Enter') {
         performSearch();
     }
+});
+
+// 내 게시물 댓글 등록 버튼 클릭 이벤트 핸들러
+$(".upload_reply").click(function (event) {
+    let feed_id = event.target.attributes.getNamedItem('feed_id').value;
+    let reply_id = 'reply_' + feed_id;
+    let reply_content = $('#' + reply_id).val();
+    var feed__id = clickedFeedId;
+    var userNickname = "{{ user.nickname|default:'' }}";
+    // 댓글 내용 확인
+    if (reply_content.length <= 0) {
+        alert("댓글을 입력하세요");
+        return 0;
+    }
+
+    // 서버에 댓글 전송
+    $.ajax({
+        url: "/content/reply",
+        data: {
+            feed_id: feed__id,
+            reply_content: reply_content
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("성공");
+            alert("댓글 성공");
+            $("#modal_comment").append('<div><strong>' + userNickname + ':</strong> ' + reply_content + '</div>');
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("완료");
+            $('#' + reply_id).val('');
+        }
+    });
+});
+
+//좋아요 댓글 등록 버튼 클릭 이벤트 핸들러
+$(".likeupload_reply").click(function (event) {
+    let feed_id = event.target.attributes.getNamedItem('feed_id').value;
+    let reply_id = 'likereply_' + feed_id;
+    let reply_content = $('#' + reply_id).val();
+    var feed__id = clickedLikeFeedId;
+    var userNickname = "{{ user.nickname|default:'' }}";
+    // 댓글 내용 확인
+    if (reply_content.length <= 0) {
+        alert("댓글을 입력하세요");
+        return 0;
+    }
+
+    // 서버에 댓글 전송
+    $.ajax({
+        url: "/content/reply",
+        data: {
+            feed_id: feed__id,
+            reply_content: reply_content
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("성공");
+            alert("댓글 성공");
+            $("#likemodal_comment").append('<div><strong>' + userNickname + ':</strong> ' + reply_content + '</div>');
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("완료");
+            $('#' + reply_id).val('');
+        }
+    });
+});
+
+//북마크 댓글 등록 버튼 클릭 이벤트 핸들러
+$(".bookupload_reply").click(function (event) {
+    let feed_id = event.target.attributes.getNamedItem('feed_id').value;
+    let reply_id = 'bookreply_' + feed_id;
+    let reply_content = $('#' + reply_id).val();
+
+    var feed__id = clickedBookmarkFeedId;
+    var userNickname = "{{ user.nickname|default:'' }}";
+    // 댓글 내용 확인
+    if (reply_content.length <= 0) {
+        alert("댓글을 입력하세요");
+        return 0;
+    }
+
+    // 서버에 댓글 전송
+    $.ajax({
+        url: "/content/reply",
+        data: {
+            feed_id: feed__id,
+            reply_content: reply_content
+        },
+        method: "POST",
+        success: function (data) {
+            console.log("성공");
+            alert("댓글 성공");
+            $("#bookmodal_comment").append('<div><strong>' + userNickname + ':</strong> ' + reply_content + '</div>');
+        },
+        error: function (request, status, error) {
+            console.log("에러");
+        },
+        complete: function () {
+            console.log("완료");
+            $('#' + reply_id).val('');
+        }
+    });
 });
 
 
